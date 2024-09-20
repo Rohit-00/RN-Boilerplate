@@ -33,7 +33,9 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
-
+.env
+android/app/google-services.json
+utils/.env.local
 # node.js
 #
 node_modules/

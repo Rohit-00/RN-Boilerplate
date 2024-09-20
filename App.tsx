@@ -1,118 +1,139 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { Component,useState,useEffect } from 'react';
+import { registerRootComponent } from 'expo';
+import 'react-native-url-polyfill/auto';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
-  Text,
-  useColorScheme,
-  View,
 } from 'react-native';
+import { NativeBaseProvider, Box } from "native-base";
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import { Svg } from 'react-native-svg';
+import Icon from "react-native-vector-icons/Ionicons.js"
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
+import auth from '@react-native-firebase/auth'
+
+
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+
+//Login Screens
+import Welcome from './src/screens/Welcome.tsx';
+import SignUp from './src/screens/SignUp.tsx';
+import SignIn from './src/screens/SignIn.tsx';
+import OTP from './src/screens/OTP.tsx';
+
+
+//Tab Screens
+import Home from './src/screens/Home.tsx';
+import Search from './src/screens/Search.tsx';
+import Library from './src/screens/Library.tsx';
+import Profile from './src/screens/Profile.tsx';
+import Search2 from './src/screens/Search2.tsx';
+import { BookmarkContextProvider } from './store/bookmarkContextProvider.tsx';
+import { LanguageContextProvider } from './store/languageContextProvider.tsx';
+
+
+
+function StackNavigations(){
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState<any>();
+
+  function onAuthStateChanged(user:any) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
+  {user?console.log(user.emailVerified):'h'}
+  
+  return(
+        <Stack.Navigator  
+        initialRouteName={user?'Main':'SingIn'}
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',}}>
+        {user?<Stack.Screen name='Main' component={MainTabNavigator} options={{headerShown:false}}/> :
+        <Stack.Screen name='Welcome' component={Welcome} options={{headerShown:false}}/>
+        
+        }
+        <Stack.Screen name='OTP' component={OTP} options={{headerShown:false}}/>
+        <Stack.Screen name='SignIn' component={SignIn} options={{headerShown:false, animation:'simple_push'}}/>
+        <Stack.Screen name='SignUp' component={SignUp} options={{headerShown:false, animation:'simple_push'}}/>
+        <Stack.Screen name='Search2' component={Search2} options={{headerShown:false}}/>
+        
+      </Stack.Navigator>
+  )
+}
+
+
+function MainTabNavigator(): React.JSX.Element{
+  return(
+      <Tab.Navigator screenOptions={
+        {
+          tabBarStyle:{
+            height:60,
+            position:'absolute',
+            margin:5,   
+            borderRadius:24,
+            borderWidth:0,
+            marginBottom:10
           },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+          
+          tabBarShowLabel:false
+          
+        }
+      }>
+        <Tab.Screen name='Home' component={Home} options={{headerShown:false, tabBarIcon:({focused,size}:any)=>
+          (focused?<Icon name='home' size={size} color={'#00C896'}></Icon>:<Icon name='home-outline' size={size}></Icon>)
+        }} />
+
+        <Tab.Screen name='Search' component={Search} options={{headerShown:false, tabBarIcon:({focused,size}:any)=>
+          (focused?<Icon name='search' size={size} color={'#00C896'}></Icon>:<Icon name='search-outline' size={size}></Icon>)
+        }} />
+        <Tab.Screen name='Library' component={Library} options={{headerShown:false, tabBarIcon:({focused,size}:any)=>
+          (focused?<Icon name='bookmark' size={size} color={'#00C896'}></Icon>:<Icon name='bookmark-outline' size={size}></Icon>)
+        }} />
+        <Tab.Screen name='Profile' component={Profile} options={{headerShown:false, tabBarIcon:({focused,size}:any)=>
+          (focused?<Icon name='person' size={size} color={'#00C896'}></Icon>:<Icon name='person-outline' size={size}></Icon>)
+        }}/>
+      </Tab.Navigator>
+  )
 }
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
 
+  
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <NativeBaseProvider>
+      <NavigationContainer>
+      <BookmarkContextProvider>
+      <LanguageContextProvider>
+      <StackNavigations />
+      </LanguageContextProvider>
+      </BookmarkContextProvider>
+      </NavigationContainer>
+      </NativeBaseProvider>
+     
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+ icon:{
+  height:25,
+  width:25,
+  resizeMode:'contain'
+ }
+  
+})
+
 
 export default App;
